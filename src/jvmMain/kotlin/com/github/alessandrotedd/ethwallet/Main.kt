@@ -1,13 +1,18 @@
 package com.github.alessandrotedd.ethwallet
 
+import androidx.compose.desktop.ui.tooling.preview.Preview
+import androidx.compose.material.Button
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
 import com.github.alessandrotedd.ethwallet.utils.decryptString
 import com.github.alessandrotedd.ethwallet.utils.encryptString
 import com.github.alessandrotedd.ethwallet.utils.generatePrivateKey
 import com.github.alessandrotedd.ethwallet.utils.hexize
 import kotlinx.coroutines.Dispatchers.Main
 import java.io.File
-import java.net.URLDecoder
-import java.nio.charset.StandardCharsets
 import java.security.InvalidParameterException
 
 fun main(args: Array<String>) {
@@ -19,9 +24,29 @@ fun main(args: Array<String>) {
     }
 }
 
+@Composable
+@Preview
+fun App() {
+    var text by remember { mutableStateOf("Hello, World!") }
+
+    MaterialTheme {
+        Button(onClick = {
+            text = "Hello, Desktop!"
+        }) {
+            Text(text)
+        }
+    }
+}
+
+fun composeApp() = application {
+    Window(onCloseRequest = ::exitApplication) {
+        App()
+    }
+}
 fun handleArgs(args: Array<String>) {
     val params = getArgsMap(args.toList())
     when (val command = args.firstOrNull()) {
+        "gui" -> composeApp()
         "generate" -> {
             val prefix = params.getOrDefault("--prefix", null).let {
                 val toHexize = params.getOrDefault("--hexize", "false").toBoolean()

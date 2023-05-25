@@ -1,41 +1,54 @@
-plugins {
-    kotlin("jvm") version "1.8.0"
-    application
-}
+import org.gradle.internal.impldep.org.fusesource.jansi.AnsiRenderer.test
+import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 group = "com.github.alessandrotedd.ethwallet"
 version = "1.1.0"
 
+plugins {
+    kotlin("multiplatform")
+    id("org.jetbrains.compose")
+    id("java")
+}
+
 repositories {
+    google()
     mavenCentral()
+    maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+}
+
+kotlin {
+    jvm {
+        jvmToolchain(11)
+        withJava()
+    }
+    sourceSets {
+        val jvmMain by getting {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+                implementation("org.web3j:core:5.0.0")
+            }
+        }
+        val jvmTest by getting
+    }
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
-    implementation("org.web3j:core:5.0.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
-    // ThreadLocalRandom
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
+    testCompileOnly("junit:junit:4.13")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine")
 }
 
-tasks.test {
+compose.desktop {
+    application {
+        mainClass = "MainKt"
+        nativeDistributions {
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            packageName = "demo"
+            packageVersion = "1.0.0"
+        }
+    }
+}
+
+test {
     useJUnitPlatform()
-}
-
-application {
-    mainClass.set("com.github.alessandrotedd.ethwallet.MainKt")
-}
-
-tasks.jar {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    manifest {
-        attributes["Main-Class"] = "com.github.alessandrotedd.ethwallet.MainKt"
-    }
-    from(configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }) {
-        exclude("META-INF/*.RSA", "META-INF/*.SF", "META-INF/*.DSA")
-    }
-}
-
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
 }
